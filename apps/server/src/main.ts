@@ -19,6 +19,7 @@ const dirs = [
     'resources/coroutes',
     'resources/pdfs',
     'resources/images',
+    'resources/terrain',
 ];
 
 async function bootstrap() {
