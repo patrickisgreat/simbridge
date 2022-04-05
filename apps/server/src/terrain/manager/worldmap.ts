@@ -1,10 +1,11 @@
+import { Worker } from 'worker_threads';
+import * as path from 'path';
 import { Terrainmap } from '../mapformat/terrainmap';
 import { Tile } from '../mapformat/tile';
 import { ElevationGrid } from '../mapformat/elevationgrid';
 import { ConfigurationDto } from '../dto/configuration.dto';
 import { PositionDto } from '../dto/position.dto';
 import { NDViewDto } from '../dto/ndview.dto';
-import { loadTiles } from './maploader';
 import { NDRenderer } from '../utils/ndrenderer';
 
 export class Worldmap {
@@ -65,8 +66,15 @@ export class Worldmap {
     public updatePosition(position: PositionDto): boolean {
         this.presentPosition = position;
 
+        const worker = new Worker(path.resolve(__dirname, './worker.js'), { workerData: { world: this, position: this.presentPosition } });
+
+        worker.on('message', (result) => {
+            console.log(result);
+
+            result.forEach((index) => this.loadElevationMap(index));
+            this.cleanupElevationCache(result);
+        });
         // TODO put this in a worker thread
-        loadTiles(this, position);
 
         // TODO put this in a worker thread (per render-call)
         for (const id in this.displays) {
